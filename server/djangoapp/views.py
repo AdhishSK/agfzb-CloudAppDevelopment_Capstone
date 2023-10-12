@@ -15,7 +15,13 @@ logger = logging.getLogger(__name__)
 
 
 # Create your views here.
+def about(request):
+    context = {}
+    return render(request, 'djangoapp/about.html', context)
 
+def contact(request):
+    context = {}
+    return render(request, 'djangoapp/contact.html', context)
 
 # Create an `about` view to render a static about page
 # def about(request):
@@ -28,7 +34,50 @@ logger = logging.getLogger(__name__)
 # Create a `login_request` view to handle sign in request
 # def login_request(request):
 # ...
+def registration_request(request):
+    context = {}
+    if request.method == 'GET':
+        return render(request, 'djangoapp/registration.html', context)
+    elif request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['psw']
+        first_name = request.POST['firstname']
+        last_name = request.POST['lastname']
+        user_exist = False
+        try:
+            User.objects.get(username=username)
+            user_exist = True
+        except:
+            logger.error("New user")
+        if not user_exist:
+            user = User.objects.create_user(username=username, first_name=first_name, last_name=last_name,
+                                            password=password)
+            user.is_superuser = True
+            user.is_staff=True
+            user.save()  
+            login(request, user)
+            return redirect("djangoapp:index")
+        else:
+            messages.warning(request, "The user already exists.")
+            return redirect("djangoapp:registration")
 
+
+def login_request(request):
+    if request.method == "POST":
+        username = request.POST['username']
+        password = request.POST['psw']
+        user = authenticate(username=username, password=password)
+        if user is not None:
+            login(request, user)
+            #messages.success(request, "Login successfully!")
+            return redirect('djangoapp:index')
+        else:
+            messages.warning(request, "Invalid username or password.")
+            return redirect("djangoapp:index")
+
+def logout_request(request):
+    logout(request)
+    return redirect('djangoapp:index')
 # Create a `logout_request` view to handle sign out request
 # def logout_request(request):
 # ...
